@@ -41,7 +41,7 @@ model = genai.GenerativeModel(
 )
 
 # Cargar el modelo usando TFSMLayer
-modelo = TFSMLayer('C:\\Users\\JEFERSON\\Desktop\\app web con efficennet\\mi_webapp\\grapeproy_savedmodel', call_endpoint='serving_default')
+modelo = TFSMLayer('grapeproy_savedmodel', call_endpoint='serving_default')
 
 # Diccionario de nombres de clases
 class_names = {
@@ -54,32 +54,31 @@ class_names = {
     6: 'Tizón de la hoja'
 }
 
-# Función para verificar si una imagen contiene suficiente verde (vid o uva)
-def is_image_of_grape(img_path):
-    img = cv2.imread(img_path)
-    hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 40, 40])
-    upper_green = np.array([85, 255, 255])
-    green_mask = cv2.inRange(hsv_img, lower_green, upper_green)
-    green_ratio = cv2.countNonZero(green_mask) / (img.size / 3)
-    return green_ratio > 0.05
-
 # Función para procesar imágenes
 def process_image(img_path):
-    img = Image.open(img_path)
-    img = img.resize((224, 224))
-    img_array = np.array(img)
-    if img_array.shape[-1] == 4:
-        img_array = img_array[..., :3]
-    img_array = img_array.astype('float32')
-    img_array = preprocess_input(img_array)
-    img_array = np.expand_dims(img_array, axis=0)
-    
-    predictions_dict = modelo(img_array)
-    predictions = predictions_dict['dense_1']
-    
-    class_idx = np.argmax(predictions)
-    return class_names[class_idx], predictions[0][class_idx]
+    try:
+        img = Image.open(img_path)
+        img = img.resize((224, 224))
+        img_array = np.array(img)
+        if img_array.shape[-1] == 4:
+            img_array = img_array[..., :3]
+        img_array = img_array.astype('float32')
+        img_array = preprocess_input(img_array)
+        img_array = np.expand_dims(img_array, axis=0)
+
+        # Verificar que el modelo esté funcionando
+        predictions_dict = modelo(img_array)
+        predictions = predictions_dict['dense_1']
+        
+        # Log de depuración para verificar los resultados de predicción
+        print(f"Predicciones: {predictions}")
+
+        class_idx = np.argmax(predictions)
+        confidence = float(predictions[0][class_idx])  # Convertir el EagerTensor a float
+        return class_names[class_idx], confidence
+    except Exception as e:
+        print(f"Error en process_image: {e}")
+        return None, None
 
 # Función para procesar videos
 def process_video(video_path):
@@ -191,7 +190,7 @@ def ingresar():
 
     return render_template('ingresar.html')
 
-# Carga y procesamiento de imágenes/videos
+# Carga y procesamiento de imágenes
 @app.route('/imagenes', methods=["GET", "POST"])
 def imagenes():
     if 'user_id' not in session:
@@ -199,35 +198,22 @@ def imagenes():
         return redirect(url_for('ingresar'))
     
     if request.method == "POST":
-        file = request.files.get('media')
-        if file:
-            file_type = file.content_type
-            upload_folder = os.path.join('static', 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            file_path = os.path.join(upload_folder, file.filename)
-            file.save(file_path)
+        files = request.files.getlist('media')
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        results = []
 
-            # Filtrado previo para verificar si es una imagen de uva
-            if "image" in file_type and not is_image_of_grape(file_path):
-                flash("La imagen no contiene una vid o uva.", 'danger')
-                return redirect(url_for("imagenes"))
-
-            class_name = None
-            if "image" in file_type:
-                class_name, _ = process_image(file_path)
-                media_type = 'image'
-                frames_result = None
-                media_path = f'uploads/{file.filename}'
-            elif "video" in file_type:
-                frames_result, detected_classes = process_video(file_path)
-                class_name = ", ".join(detected_classes)
-                media_type = 'video'
-                media_path = None
-            else:
-                flash("Tipo de archivo no soportado", 'danger')
-                return redirect(url_for("imagenes"))
-            
-            try:
+        for file in files:
+            if file:
+                file_path = os.path.join(upload_folder, file.filename)
+                file.save(file_path)
+                class_name, confidence = process_image(file_path)
+                results.append({
+                    'file_path': f'uploads/{file.filename}',
+                    'class_name': class_name,
+                    'confidence': confidence
+                })
+                
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
@@ -235,19 +221,42 @@ def imagenes():
                     (session['user_id'], class_name, datetime.now())
                 )
                 conn.commit()
-            except Exception as e:
-                print(f"Error guardando la consulta: {e}")
-            finally:
                 cursor.close()
                 conn.close()
-            
-            return render_template("imagenes.html", 
-                                   media_type=media_type, 
-                                   class_name=class_name if media_type == 'image' else None, 
-                                   frames_result=frames_result if media_type == 'video' else None,
-                                   media_path=media_path,
-                                   detected_classes=detected_classes if media_type == 'video' else [class_name])
+        
+        return render_template("imagenes.html", results=results)
     return render_template("imagenes.html")
+
+# Carga y procesamiento de videos
+@app.route('/videos', methods=["GET", "POST"])
+def videos():
+    if 'user_id' not in session:
+        flash("Por favor, inicia sesión para acceder a esta página", "danger")
+        return redirect(url_for('ingresar'))
+    
+    if request.method == "POST":
+        file = request.files.get('media')
+        if file:
+            upload_folder = os.path.join('static', 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            file_path = os.path.join(upload_folder, file.filename)
+            file.save(file_path)
+
+            frames_result, detected_classes = process_video(file_path)
+            class_name = ", ".join(detected_classes)
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO consultas (user_id, class_name, consulta_fecha) VALUES (%s, %s, %s)",
+                (session['user_id'], class_name, datetime.now())
+            )
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            return render_template("videos.html", frames_result=frames_result, detected_classes=detected_classes)
+    return render_template("videos.html")
 
 # Ruta para obtener recomendaciones de Gemini
 @app.route('/get_recommendations', methods=['POST'])

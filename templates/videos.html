@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='logoVG.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Vanguard - Subir Imagen</title>
+    <title>Vanguard - Subir Video</title>
 </head>
 <body>
     <div class="navbar">
@@ -30,26 +30,26 @@
     <!-- Contenido principal -->
     <div class="container">
         <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click();">
-            <h2>Sube una o varias imágenes para clasificarlas</h2>
-            <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar</p>
-            <input type="file" name="media" accept="image/*" multiple id="fileInput" style="display: none;">
+            <h2>Sube uno o varios videos para clasificarlos</h2>
+            <p>Arrastra y suelta los videos aquí o haz clic para seleccionar</p>
+            <input type="file" name="media" accept="video/*" multiple id="fileInput" style="display: none;">
         </div>
         
-        <!-- Botón de Subir Imágenes centrado -->
+        <!-- Botón de Subir Videos centrado -->
         <div style="text-align: center;">
-            <button class="upload-button" onclick="document.getElementById('fileInput').click();">Subir Imágenes</button>
+            <button class="upload-button" onclick="document.getElementById('fileInput').click();">Subir Videos</button>
         </div>
 
-        {% if results %}
-        <h2>Resultados de Clasificación:</h2>
-        <div class="frames-gallery">
-            {% for result in results %}
-                <div class="frame">
-                    <img src="{{ url_for('static', filename=result['file_path']) }}" alt="Imagen Clasificada" class="frame-image">
-                    <p>Clase detectada: {{ result['class_name'] }}</p>
-                </div>
-            {% endfor %}
-        </div>
+        {% if frames_result %}
+            <h2>Resultados de Clasificación de Video:</h2>
+            <div class="frames-gallery">
+                {% for frame in frames_result %}
+                    <div class="frame">
+                        <img src="{{ url_for('static', filename=frame['frame_path']) }}" alt="Frame Clasificado" class="frame-image">
+                        <p>Clase detectada: {{ frame['class_name'] }}</p>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
 
@@ -67,7 +67,7 @@
                 formData.append('media', files[i]);
             }
 
-            fetch('/imagenes', {
+            fetch('/videos', {
                 method: 'POST',
                 body: formData
             })
@@ -75,7 +75,7 @@
             .then(data => {
                 document.body.innerHTML = data;
             })
-            .catch(error => console.error('Error al subir imágenes:', error));
+            .catch(error => console.error('Error al subir videos:', error));
         }
 
         // Configuración para arrastrar y soltar

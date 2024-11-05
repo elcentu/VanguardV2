@@ -33,33 +33,89 @@ h1, h2 {
     margin-right: 10px;
 }
 
-.navbar h1 {
-    font-size: 1.5rem;
+.navbar-right .navbar-link {
+    color: #9333ea;
+    margin-left: 1rem;
+    text-decoration: none;
+    font-size: 1rem;
 }
 
-.menu-btn {
+.navbar-right .navbar-link:hover {
+    color: #7e22ce;
+}
+
+/* Menu Button */
+.menu-button {
     background-color: #9333ea;
-    border: none;
     color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
     padding: 10px;
+    border: none;
     border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
 }
 
-.menu-btn:hover {
+.menu-button:hover {
     background-color: #7e22ce;
 }
 
-.menu a {
-    display: block;
-    text-decoration: none;
-    color: #9333ea;
-    padding: 10px 15px;
+/* Sidebar styles (updated to appear on the right) */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0; /* Positioned to the right */
+    width: 200px;
+    height: 100%;
+    background-color: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Shadow on the left side */
+    transform: translateX(100%); /* Hide to the right */
+    transition: transform 0.3s ease;
+    z-index: 1000;
 }
 
-.menu a:hover {
-    background-color: #f3e8ff;
+.sidebar.open {
+    transform: translateX(0); /* Show sidebar */
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 20px;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #9333ea;
+    font-size: 1rem;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #f4f4f4;
+}
+
+/* Overlay for Sidebar */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.overlay.show {
+    display: block;
 }
 
 /* Container and content styles */
@@ -72,15 +128,36 @@ h1, h2 {
     border-radius: 10px;
 }
 
-h2 {
+/* Upload Area Styles */
+.upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #9333ea;
+    padding: 40px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.upload-area.drag-over {
+    background-color: #f3e8ff;
+}
+
+.upload-area h2 {
+    color: #9333ea;
+    font-size: 1.5rem;
     margin-bottom: 20px;
 }
 
-.upload-area {
-    text-align: center;
-}
-
-.upload-button {
+/* Upload Button Styles */
+.upload-button, .upload-button-image, .upload-button-video {
     background-color: #9333ea;
     color: white;
     padding: 15px 30px;
@@ -89,58 +166,31 @@ h2 {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin: 10px;
 }
 
-.upload-button:hover {
+.upload-button:hover, .upload-button-image:hover, .upload-button-video:hover {
     background-color: #7e22ce;
 }
 
-/* Styles for result display */
-.result {
-    margin-top: 30px;
-    text-align: center;
-}
-
-.result img {
-    max-width: 100%;
-    height: auto;
-    margin-top: 20px;
-}
-
-.error {
-    color: red;
-    font-weight: bold;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .navbar h1 {
-        font-size: 1.2rem;
-    }
-    
-    .upload-button {
-        width: 100%;
-        padding: 10px;
-    }
-
-    .container {
-        padding: 10px;
-    }
-}
-
-/* Button style for forms */
-.btn-success {
+/* Shortcut Buttons for Image and Video Upload */
+.shortcut-button {
+    display: inline-block;
     background-color: #9333ea;
-    border-color: #9333ea;
     color: white;
+    padding: 15px 30px;
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 10px;
+    transition: background-color 0.3s;
 }
 
-.btn-success:hover {
+.shortcut-button:hover {
     background-color: #7e22ce;
-    border-color: #7e22ce;
 }
 
-/* Styles for frames gallery */
+/* Frames Gallery for Videos */
 .frames-gallery {
     display: flex;
     flex-wrap: wrap;
@@ -148,19 +198,19 @@ h2 {
     justify-content: center;
 }
 
+/* Frame Style for Video Frames */
 .frame {
-    text-align: center;
     max-width: 150px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .frame img {
     width: 100%;
-    height: auto;
     border-radius: 8px;
 }
 
@@ -170,7 +220,7 @@ h2 {
     color: #333;
 }
 
-/* Botón de recomendaciones */
+/* Recommendation Button */
 .recommendation-button {
     background-color: #9333ea;
     color: white;
@@ -189,9 +239,7 @@ h2 {
     background-color: #7e22ce;
 }
 
-/* Estilos para el modal de recomendaciones */
-
-/* Fondo oscuro translúcido y centrado del modal */
+/* Modal styles */
 .modal {
     display: flex;
     align-items: center;
@@ -205,7 +253,6 @@ h2 {
     z-index: 1000;
 }
 
-/* Contenido del modal */
 .modal-content {
     width: 80%;
     max-width: 600px;
@@ -213,7 +260,6 @@ h2 {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    font-family: 'Arial', sans-serif;
     font-size: 1rem;
     line-height: 1.6;
     white-space: pre-line;
@@ -222,7 +268,6 @@ h2 {
     position: relative;
 }
 
-/* Botón de cierre del modal */
 .close {
     font-size: 1.5rem;
     font-weight: bold;
@@ -233,64 +278,18 @@ h2 {
     right: 15px;
 }
 
-/* Estilo de listas y encabezados */
-#recommendationContent h2, #recommendationContent h3 {
-    color: #333;
-    font-weight: bold;
-    margin: 1rem 0 0.5rem;
-}
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .navbar h1 {
+        font-size: 1.2rem;
+    }
 
-#recommendationContent p, #recommendationContent ul, #recommendationContent li {
-    color: #333;
-    font-size: 1rem;
-}
+    .upload-button, .shortcut-button {
+        width: 100%;
+        padding: 10px;
+    }
 
-#recommendationContent ul {
-    padding-left: 20px;
-    margin-top: 0.5rem;
-}
-
-#recommendationContent li {
-    margin-bottom: 0.5rem;
-}
-
-/* Para negritas y cursivas */
-#recommendationContent strong {
-    font-weight: bold;
-}
-
-#recommendationContent em {
-    font-style: italic;
-}
-
-/* Estilo para la imagen cargada */
-.uploaded-image {
-    max-width: 100%;
-    height: auto;
-    margin-top: 20px;
-}
-
-/* Estilo para las imágenes de los frames */
-.frame-image {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.close-button {
-    display: block;
-    width: 100%;
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #7e22ce;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    background-color: #7e22ce;
+    .container {
+        padding: 10px;
+    }
 }
