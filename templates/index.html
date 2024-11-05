@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanguard - Clasificación de Enfermedades en Uvas</title> <!-- Título actualizado -->
-    <link rel="icon" href="{{ url_for('static', filename='logoVG.png') }}"> <!-- Favicon añadido -->
+    <title>Vanguard - Clasificación de Enfermedades en Uvas</title>
+    <link rel="icon" href="{{ url_for('static', filename='logoVG.png') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
-            background-color: #f8f9fa; /* Color de fondo claro */
+            background-color: #f8f9fa;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
         }
 
         .hero {
@@ -21,28 +30,45 @@
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
+            width: 100%;
+            max-width: 600px; /* Mantener el tamaño original en pantallas grandes */
+        }
+
+        .hero h1 {
+            color: black;
+            font-size: 2rem; /* Tamaño de fuente en pantallas grandes */
+        }
+
+        .hero p {
+            color: black;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
         }
 
         .btn {
-            width: 200px; /* Ancho fijo para los botones */
+            width: 200px; /* Ancho fijo para botones en pantallas grandes */
+            margin: 5px;
+            background-color: #9333ea;
+            border-color: #9333ea;
+            color: white;
         }
 
         .logo {
-            width: 150px; /* Tamaño ajustable del logo */
-            margin-bottom: 20px; /* Espacio debajo del logo */
+            width: 120px;
+            margin-bottom: 20px;
         }
 
         footer {
-            background-color: #9333ea; /* Color morado */
+            background-color: #9333ea;
             color: white;
             padding: 10px 20px;
-            position: relative;
-            bottom: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            position: relative;
+            bottom: 0;
         }
 
         footer a {
@@ -54,20 +80,51 @@
         footer a:hover {
             text-decoration: underline;
         }
+
+        /* Media query para pantallas pequeñas */
+        @media (max-width: 576px) {
+            .hero {
+                padding: 40px 15px; /* Reducir el padding para móviles */
+                width: 100%;
+                max-width: 100%; /* Mantener el ancho completo en móviles */
+            }
+
+            .hero h1 {
+                font-size: 1.6rem; /* Ajuste ligero del tamaño de fuente */
+            }
+
+            .hero p {
+                font-size: 1rem; /* Ajuste ligero del tamaño de fuente */
+            }
+
+            .btn {
+                width: 100%; /* Botones ocupan todo el ancho en móviles */
+            }
+
+            footer {
+                flex-direction: column;
+                text-align: center;
+                font-size: 12px;
+            }
+
+            footer div {
+                margin-bottom: 5px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container d-flex flex-column justify-content-center align-items-center vh-100">
+    <div class="container">
         <div class="hero">
             <!-- Logo -->
             <img src="{{ url_for('static', filename='logoVG.png') }}" alt="Logo" class="logo">
             
-            <h1 class="mb-4" style="color: black;">¡Protege tu cultivo!</h1>
-            <p class="mb-4" style="color: black;">Esta IA te ayudará a detectar el tipo de plaga que atacó el cultivo</p>
+            <h1>¡Protege tu cultivo!</h1>
+            <p>Esta IA te ayudará a detectar el tipo de plaga que atacó el cultivo</p>
             
-            <div>
-                <a href="/registro" class="btn mx-2" style="background-color: #9333ea; border-color: #9333ea; color: white;">Registrar</a>
-                <a href="/ingresar" class="btn mx-2" style="background-color: #9333ea; border-color: #9333ea; color: white;">Ingresar</a>
+            <div class="d-flex justify-content-center">
+                <a href="/registro" class="btn">Registrar</a>
+                <a href="/ingresar" class="btn">Ingresar</a>
             </div>
         </div>
     </div>
