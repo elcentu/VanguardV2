@@ -50,6 +50,7 @@
                 <div class="form-group">
                     <label for="nombre">Nombre completo</label>
                     <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    <div class="text-danger" id="error-nombre">El nombre debe tener al menos 4 letras y no contener números ni caracteres especiales.</div>
                 </div>
                 <div class="form-group">
                     <label for="correo">Correo electrónico</label>
@@ -109,15 +110,26 @@
         }
 
         function validarFormulario() {
+            const nombre = document.getElementById('nombre').value;
             const correo = document.getElementById('correo').value;
             const contraseña = document.getElementById('contraseña').value;
             const repetirContraseña = document.getElementById('repetir-contraseña').value;
 
+            const errorNombre = document.getElementById('error-nombre');
             const errorCorreo = document.getElementById('error-correo');
             const errorContraseñaFuerte = document.getElementById('error-contraseña-fuerte');
             const errorContraseñaCoinciden = document.getElementById('error-contraseña-coinciden');
 
             let esValido = true;
+
+            // Validación del nombre
+            const regexNombre = /^[a-zA-Z\s]{4,}$/;
+            if (!regexNombre.test(nombre)) {
+                errorNombre.style.display = 'block';
+                esValido = false;
+            } else {
+                errorNombre.style.display = 'none';
+            }
 
             // Validación del correo electrónico
             const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

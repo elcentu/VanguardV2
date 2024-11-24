@@ -1,12 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{{ url_for('static', filename='logoVG.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Vanguard - Subir Imagen</title>
+    <style>
+        p, li {
+            margin: 0.5em 0;
+            text-indent: 1em;
+        }
+
+        ul, ol {
+            padding-left: 2em;
+        }
+
+        h2, h3, h4 {
+            margin: 0.5em 0 0.3em;
+        }
+
+        .frames-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .frame {
+            position: relative;
+            background-color: #f3f3f3;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .frame img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .frame p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .select-frame-btn {
+            margin-top: 5px;
+            background-color: #4A148C;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .select-frame-btn.selected {
+            background-color: #6a1b9a;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
+
 <body>
     <div class="navbar">
         <div class="navbar-left">
@@ -16,7 +75,6 @@
         <button class="menu-button" onclick="toggleSidebar()">☰</button>
     </div>
 
-    <!-- Sidebar de navegación -->
     <div class="overlay" onclick="toggleSidebar()"></div>
     <aside class="sidebar" id="sidebar">
         <ul>
@@ -27,33 +85,49 @@
         </ul>
     </aside>
 
-    <!-- Contenido principal -->
     <div class="container">
-        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click();">
+        <div class="upload-area" id="uploadArea" onclick="fileInput.click();">
             <h2>Sube una o varias imágenes para clasificarlas</h2>
             <p>Arrastra y suelta las imágenes aquí o haz clic para seleccionar</p>
             <input type="file" name="media" accept="image/*" multiple id="fileInput" style="display: none;">
         </div>
-        
-        <!-- Botón de Subir Imágenes centrado -->
+
         <div style="text-align: center;">
-            <button class="upload-button" onclick="document.getElementById('fileInput').click();">Subir Imágenes</button>
+            <button class="upload-button" onclick="fileInput.click();">Subir Imágenes</button>
         </div>
 
-        {% if results %}
-        <h2>Resultados de Clasificación:</h2>
-        <div class="frames-gallery">
-            {% for result in results %}
+        <div id="classificationResults">
+            {% if results %}
+            <h2>Resultados de Clasificación:</h2>
+            <div class="frames-gallery">
+                {% for result in results %}
                 <div class="frame">
-                    <img src="{{ url_for('static', filename=result['file_path']) }}" alt="Imagen Clasificada" class="frame-image">
+                    <img src="{{ url_for('static', filename=result['frame_path']) }}" alt="Imagen Clasificada"
+                        class="frame-image">
                     <p>Clase detectada: {{ result['class_name'] }}</p>
+                    <button class="select-frame-btn" onclick="selectFrame('{{ result['frame_path'] }}', '{{ result['class_name'] }}', this)">
+                        Seleccionar para Validación
+                    </button>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+            <button onclick="getRecommendations()" class="recommendation-button">Obtener Recomendaciones</button>
+            <button onclick="sendSelectedFrames()" class="recommendation-button">Enviar a Validación</button>
+            {% endif %}
         </div>
-        {% endif %}
+    </div>
+
+    <div id="recommendationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Recomendaciones</h2>
+            <div id="recommendationContent"></div>
+        </div>
     </div>
 
     <script>
+        const selectedFrames = [];
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay');
@@ -62,6 +136,7 @@
         }
 
         function submitForm(files) {
+            document.getElementById('classificationResults').innerHTML = '';
             const formData = new FormData();
             for (let i = 0; i < files.length; i++) {
                 formData.append('media', files[i]);
@@ -78,33 +153,84 @@
             .catch(error => console.error('Error al subir imágenes:', error));
         }
 
-        // Configuración para arrastrar y soltar
         const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('drag-over');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('drag-over');
-        });
-
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('drag-over');
             const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                submitForm(files);
-            }
+            if (files.length > 0) { submitForm(files); }
         });
 
         fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                submitForm(fileInput.files);
-            }
+            if (fileInput.files.length > 0) { submitForm(fileInput.files); }
         });
+
+        function getRecommendations() {
+            const classNames = Array.from(document.querySelectorAll('.frame p'))
+                .map(p => p.textContent.replace('Clase detectada: ', '').trim())
+                .filter((value, index, self) => self.indexOf(value) === index);
+
+            if (classNames.length === 0) {
+                console.error('No hay clases detectadas para enviar.');
+                return;
+            }
+
+            fetch('/get_recommendations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ disease_names: classNames })
+            })
+            .then(response => response.json())
+            .then(data => {
+                openModal();
+                document.getElementById('recommendationContent').innerHTML = data.recommendations;
+            })
+            .catch(error => console.error('Error al obtener recomendaciones:', error));
+        }
+
+        function selectFrame(framePath, className, button) {
+            const frame = { frame_path: framePath, class_name: className };
+            const index = selectedFrames.findIndex(f => f.frame_path === framePath);
+
+            if (index === -1) {
+                selectedFrames.push(frame);
+                button.classList.add("selected");
+                button.innerText = "Seleccionado";
+            } else {
+                selectedFrames.splice(index, 1);
+                button.classList.remove("selected");
+                button.innerText = "Seleccionar para Validación";
+            }
+        }
+
+        function sendSelectedFrames() {
+            if (selectedFrames.length === 0) {
+                alert("Selecciona al menos un frame para enviar a validación.");
+                return;
+            }
+
+            fetch('/enviar_a_validacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ frames: selectedFrames })
+            })
+            .then(response => {
+                if (response.ok) {
+                    response.json().then(data => {
+                        window.location.href = data.redirect_url;
+                    });
+                } else {
+                    alert("Hubo un error al enviar las imágenes a validación.");
+                }
+            })
+            .catch(error => console.error('Error al enviar imágenes a validación:', error));
+        }
+
+        function openModal() { document.getElementById("recommendationModal").style.display = "flex"; }
+        function closeModal() { document.getElementById("recommendationModal").style.display = "none"; }
     </script>
 </body>
+
 </html>

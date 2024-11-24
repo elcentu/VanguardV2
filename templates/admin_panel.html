@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Administrador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_panel.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <header>
+            <h1>Panel del Administrador</h1>
+            <p>Bienvenido, Admin</p>
+            <div class="admin-actions">
+                <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
+            </div>
+        </header>
+
+        <section class="filters">
+            <h2>Filtros</h2>
+            <form method="GET" action="{{ url_for('admin_panel') }}">
+                <div class="filter-group">
+                    <label for="usuario">Usuario:</label>
+                    <input type="text" id="usuario" name="usuario" placeholder="Nombre del usuario">
+                </div>
+                <div class="filter-group">
+                    <label for="fecha_desde">Desde:</label>
+                    <input type="date" id="fecha_desde" name="fecha_desde">
+                </div>
+                <div class="filter-group">
+                    <label for="fecha_hasta">Hasta:</label>
+                    <input type="date" id="fecha_hasta" name="fecha_hasta">
+                </div>
+                <div class="filter-group">
+                    <label for="clase">Clase:</label>
+                    <select id="clase" name="clase">
+                        <option value="">Todas</option>
+                        <option value="Botrytis cinerea">Botrytis cinerea</option>
+                        <option value="Esca">Esca</option>
+                        <option value="Mildiú">Mildiú</option>
+                        <option value="Oídio">Oídio</option>
+                        <option value="Podredumbre negra">Podredumbre negra</option>
+                        <option value="Tizón de la hoja">Tizón de la hoja</option>
+                        <option value="Saludable">Saludable</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <button type="submit" class="filter-btn">Aplicar Filtros</button>
+            </form>
+        </section>
+
+        <section class="data-table">
+            <h2>Validaciones por Usuario</h2>
+            <form id="export-form" method="POST" action="{{ url_for('exportar_excel') }}">
+                {% for usuario, fechas in validaciones_por_usuario.items() %}
+                    <div class="user-section">
+                        <h3>Usuario: {{ usuario }}</h3>
+                        {% for fecha, validaciones in fechas.items() %}
+                            <div class="validation-group">
+                                <h4>Validaciones de {{ fecha }}</h4>
+                                <button type="button" onclick="toggleVisibility('validaciones-{{ usuario | replace(' ', '_') }}-{{ fecha | replace(':', '_') | replace('-', '_') }}')">Mostrar/Ocultar</button>
+                                <label>
+                                    <input type="checkbox" class="group-selector" data-group="group-{{ usuario | replace(' ', '_') }}-{{ fecha | replace(':', '_') | replace('-', '_') }}">
+                                    Seleccionar todo
+                                </label>
+                                <div id="validaciones-{{ usuario | replace(' ', '_') }}-{{ fecha | replace(':', '_') | replace('-', '_') }}" class="validaciones-list" style="display: none;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Correo</th>
+                                                <th>Clase Predicha</th>
+                                                <th>Validación Usuario</th>
+                                                <th>Imagen</th>
+                                                <th>Seleccionar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="group-{{ usuario | replace(' ', '_') }}-{{ fecha | replace(':', '_') | replace('-', '_') }}">
+                                            {% for validacion in validaciones %}
+                                            <tr>
+                                                <td>{{ validacion.id }}</td>
+                                                <td>{{ validacion.correo }}</td>
+                                                <td>{{ validacion.model_class }}</td>
+                                                <td>{{ validacion.user_class }}</td>
+                                                <td>
+                                                    <img src="{{ url_for('static', filename=validacion.frame_path) }}" alt="Imagen" class="frame-img">
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" name="validaciones_seleccionadas" value="{{ validacion.id }}" class="validation-checkbox" data-group="group-{{ usuario | replace(' ', '_') }}-{{ fecha | replace(':', '_') | replace('-', '_') }}">
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="export-container">
+                    <button type="submit" class="export-btn">Exportar a Excel</button>
+                </div>
+            </form>
+        </section>
+    </div>
+    <script>
+        // Mostrar/ocultar detalles
+        function toggleVisibility(id) {
+            const element = document.getElementById(id);
+            element.style.display = element.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Seleccionar o deseleccionar todas las validaciones en un grupo
+        document.querySelectorAll('.group-selector').forEach(selector => {
+            selector.addEventListener('change', function () {
+                const group = this.dataset.group;
+                const checkboxes = document.querySelectorAll(`.validation-checkbox[data-group="${group}"]`);
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        });
+
+        // Asegurarse de mantener sincronizado el "Seleccionar todo" con los checkboxes individuales
+        document.querySelectorAll('.validation-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                const group = this.dataset.group;
+                const groupCheckboxes = document.querySelectorAll(`.validation-checkbox[data-group="${group}"]`);
+                const groupSelector = document.querySelector(`.group-selector[data-group="${group}"]`);
+                groupSelector.checked = Array.from(groupCheckboxes).every(cb => cb.checked);
+            });
+        });
+    </script>
+</body>
+</html>

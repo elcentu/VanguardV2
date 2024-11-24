@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='logoVG.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='validacion.css') }}">
+    <title>Vanguard - Validación</title>
+</head>
+<body>
+    <h2>Validación de Resultados</h2>
+
+    <div class="content-wrapper">
+        <div class="frames-container">
+            <h3>Detección por Vanguard</h3>
+            <div class="frames-gallery">
+                {% if frames %}
+                    {% for frame in frames %}
+                    <div class="frame">
+                        <img src="{{ url_for('static', filename=frame['frame_path']) }}" alt="Frame Clasificado">
+                        <p>Clasificación: {{ frame['class_name'] if frame['class_name'] else 'No especificado' }}</p>
+                        {% if frame['is_video'] %}
+                        <p>Tiempo del Frame: {{ frame['frame_time'] }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No se encontraron frames para validar.</p>
+                {% endif %}
+            </div>
+
+            <!-- Línea separadora dinámica -->
+            <hr class="dynamic-separator">
+
+            <h3>Validación de Usuario</h3>
+            <div class="frames-gallery">
+                {% for frame in frames %}
+                <div class="frame">
+                    <img src="{{ url_for('static', filename=frame['frame_path']) }}" alt="Frame Clasificado">
+                    {% if frame['is_video'] %}
+                    <p>Tiempo del Frame: {{ frame['frame_time'] }}</p>
+                    {% endif %}
+                    <div class="input-container">
+                        <p>Validación:</p>
+                        <input type="text" class="validation-input" maxlength="1" data-frame="{{ frame['frame_path'] }}" placeholder="A-H">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button onclick="submitValidations()" class="submit-validations-btn">Guardar Validaciones</button>
+        </div>
+
+        <div class="legend">
+            <h3>Leyenda de Clases</h3>
+            {% for letter, class_name in class_legend.items() %}
+            <div class="legend-item">
+                <span>{{ letter }}: {{ class_name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function submitValidations() {
+            const validations = [];
+            document.querySelectorAll('.validation-input').forEach(input => {
+                const framePath = input.getAttribute('data-frame');
+                const userClass = input.value.toUpperCase();
+
+                if (userClass.match(/^[A-H]$/)) {
+                    validations.push({
+                        frame_path: framePath,
+                        user_class: userClass
+                    });
+                }
+            });
+
+            if (validations.length === 0) {
+                alert("Por favor, ingrese validaciones para al menos un frame.");
+                return;
+            }
+
+            fetch('/validacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ validations: validations })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || "Validaciones guardadas correctamente.");
+                window.location.href = data.redirect_url || "/imagenes";
+            })
+            .catch(error => console.error('Error al guardar validaciones:', error));
+        }
+    </script>
+</body>
+</html>
